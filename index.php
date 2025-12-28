@@ -2,16 +2,13 @@
 session_start();
 require 'config/database.php';
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $senha = $_POST['senha'];
 
-
     $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = ?");
     $stmt->execute([$email]);
     $usuario = $stmt->fetch();
-
 
     if ($usuario && password_verify($senha, $usuario['senha'])) {
         $_SESSION['usuario_id'] = $usuario['id'];
@@ -19,9 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-
-    $erro = 'Login inválido';
+    // ERRO → salva na sessão e redireciona
+    $_SESSION['erro_login'] = 'Email ou senha inválidos';
+    header('Location: index.php');
+    exit;
 }
+
 ?>
 
 
@@ -38,8 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="card p-4 shadow" style="width:350px">
         <h4 class="mb-3 text-center">Login Phinance</h4>
-        <?php if (isset($erro)): ?>
-            <div class="alert alert-danger"><?= $erro ?></div>
+        <?php if (!empty($_SESSION['erro_login'])): ?>
+            <div class="alert alert-danger">
+                <?= $_SESSION['erro_login']; ?>
+            </div>
+            <?php unset($_SESSION['erro_login']); ?>
         <?php endif; ?>
         <form method="post">
             <input class="form-control mb-2" name="email" placeholder="Email" required>
